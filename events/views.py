@@ -30,22 +30,33 @@ class UserRegisterView(APIView):
 
 class EventsView(APIView):
     """
-    Provides role-based access to get list of events or to create an event 
+    Provides role-based access to get list of events or to create an event.
     """
 
     permission_classes = [EventsViewPermissions]
     renderer_classes = [JSONRenderer]
 
-    # To get list of events
+    
     def get(self, request):
-        events = Event.objects.all()    # Fetch all events
-        serializer = EventSerializer(events, many = True)   # serialize events list
+        """
+        To get list of events
+        """
+        # Fetch all events
+        events = Event.objects.all()
+        # Serialize events list
+        serializer = EventSerializer(events, many = True)
         return Response(serializer.data)
     
-    # To create an event
+    
     def post(self, request):
+        """
+            To create an event
+        """
+        # Serialize request data
         serializer = EventSerializer(data = request.data)
+        # Validate request data against the model
         if serializer.is_valid():
+            # Create an event object 
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
@@ -53,22 +64,25 @@ class EventsView(APIView):
 
 class TicketPurchaseView(APIView):
     """
-    Allows 'User' role to purchase tickets
+    Allows 'User' role to purchase tickets. 
+    This view has custom logic before creating an object therefore, 
+    Serializer is not used here.
     """
     permission_classes = [TicketPurchasePermissions]
     renderer_classes = [JSONRenderer]
     
     def post(self, request, event_id):
         try:
-            # Get the event object or raise Http404
+            # Get the event object
             event = Event.objects.get(pk = event_id)
         except Event.DoesNotExist:
+            # Return error if event object does not exist
             return Response({"error": "Purchasing for a non-existent event"}, 
             status=status.HTTP_400_BAD_REQUEST)
         quantity = request.data.get("quantity", 0)
         # Check if quantity is an integer and it is greater than 0
         if isinstance(quantity, int) and quantity > 0:
-            # Total tickets should be greater or equal to both tickets_sold and quantity
+            # Total tickets should be greater or equal to tickets_sold and quantity
             if event.total_tickets >= (event.tickets_sold + quantity):
                 Ticket.objects.create(
                     user = request.user,

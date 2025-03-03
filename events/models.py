@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     """
-    Inherit from AbstractUser. username uniqueness and password hashing is handled
+    Inherit from AbstractUser. username uniqueness and password hashing is handled by User model
     """
     ROLE_CHOICES = [
         ('Admin', 'Admin'),
